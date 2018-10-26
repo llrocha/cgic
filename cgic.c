@@ -30,11 +30,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <io.h>
 
 /* cgic 2.01 */
 #include <fcntl.h>
+
+#define unlink _unlink
 
 #else
 #include <unistd.h>
@@ -199,7 +201,7 @@ int main(int argc, char *argv[]) {
 	fprintf(dout, "%s\n", cgiContentType);
 	CGICDEBUGEND	
 #endif /* CGICDEBUG */
-#ifdef WIN32
+#ifdef _WIN32
 	/* 1.07: Must set stdin and stdout to binary mode */
 	/* 2.0: this is particularly crucial now and must not be removed */
 	_setmode( _fileno( stdin ), _O_BINARY );
@@ -636,7 +638,7 @@ outOfMemory:
 
 static cgiParseResultType getTempFileName(char *tfileName)
 {
-#ifndef WIN32
+#ifndef _WIN32
 	/* Unix. Use the robust 'mkstemp' function to create
 		a temporary file that is truly unique, with
 		permissions that are truly safe. The 
