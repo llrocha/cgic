@@ -8,20 +8,6 @@
 
 #define cgicTempDir "/tmp"
 
-#if CGICDEBUG
-#define CGICDEBUGSTART \
-	{ \
-		FILE *dout; \
-		dout = fopen("/home/boutell/public_html/debug", "a"); \
-	
-#define CGICDEBUGEND \
-		fclose(dout); \
-	}
-#else /* CGICDEBUG */
-#define CGICDEBUGSTART
-#define CGICDEBUGEND
-#endif /* CGICDEBUG */
-
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -125,6 +111,21 @@ static int cgiStrBeginsNc(char *s1, char *s2);
 static int unitTest();
 #endif
 
+void debug(const char * fmt, ...)
+{
+#ifdef CGICDEBUG
+	FILE *dout;
+	dout = fopen(cgicTempDir "/cgic.log", "a");
+	if (dout) {
+		va_list args;
+		va_start(args, fmt);
+		vdebug(fmt, args);
+		va_end(args);
+	}
+	fclose(dout);
+#endif /* CGICDEBUG */
+}
+
 int main(int argc, char *argv[]) {
 	int result;
 	char *cgiContentLengthString;
@@ -194,13 +195,11 @@ int main(int argc, char *argv[]) {
 	cgiGetenv(&cgiUserAgent, "HTTP_USER_AGENT");
 	cgiGetenv(&cgiReferrer, "HTTP_REFERER");
 	cgiGetenv(&cgiCookie, "HTTP_COOKIE");
-#ifdef CGICDEBUG
-	CGICDEBUGSTART
-	fprintf(dout, "%d\n", cgiContentLength);
-	fprintf(dout, "%s\n", cgiRequestMethod);
-	fprintf(dout, "%s\n", cgiContentType);
-	CGICDEBUGEND	
-#endif /* CGICDEBUG */
+
+	debug("%d\n", cgiContentLength);
+	debug("%s\n", cgiRequestMethod);
+	debug("%s\n", cgiContentType);
+
 #ifdef _WIN32
 	/* 1.07: Must set stdin and stdout to binary mode */
 	/* 2.0: this is particularly crucial now and must not be removed */
@@ -224,73 +223,37 @@ int main(int argc, char *argv[]) {
 
 
 	if (cgiStrEqNc(cgiRequestMethod, "post")) {
-#ifdef CGICDEBUG
-		CGICDEBUGSTART
-		fprintf(dout, "POST recognized\n");
-		CGICDEBUGEND
-#endif /* CGICDEBUG */
+		debug("POST recognized\n");
 		if (cgiStrEqNc(cgiContentType, "application/x-www-form-urlencoded")) {	
-#ifdef CGICDEBUG
-			CGICDEBUGSTART
-			fprintf(dout, "Calling PostFormInput\n");
-			CGICDEBUGEND	
-#endif /* CGICDEBUG */
+			debug("Calling PostFormInput\n");
 			if (cgiParsePostFormInput() != cgiParseSuccess) {
-#ifdef CGICDEBUG
-				CGICDEBUGSTART
-				fprintf(dout, "PostFormInput failed\n");
-				CGICDEBUGEND	
-#endif /* CGICDEBUG */
+				debug("PostFormInput failed\n");
 				cgiHeaderStatus(500, "Error reading form data");
 				cgiFreeResources();
 				return -1;
 			}	
-#ifdef CGICDEBUG
-			CGICDEBUGSTART
-			fprintf(dout, "PostFormInput succeeded\n");
-			CGICDEBUGEND	
-#endif /* CGICDEBUG */
+			debug("PostFormInput succeeded\n");
 		} else if (cgiStrEqNc(cgiContentType, "multipart/form-data")) {
-#ifdef CGICDEBUG
-			CGICDEBUGSTART
-			fprintf(dout, "Calling PostMultipartInput\n");
-			CGICDEBUGEND	
-#endif /* CGICDEBUG */
+			debug("Calling PostMultipartInput\n");
 			if (cgiParsePostMultipartInput() != cgiParseSuccess) {
-#ifdef CGICDEBUG
-				CGICDEBUGSTART
-				fprintf(dout, "PostMultipartInput failed\n");
-				CGICDEBUGEND	
-#endif /* CGICDEBUG */
+				debug("PostMultipartInput failed\n");
 				cgiHeaderStatus(500, "Error reading form data");
 				cgiFreeResources();
 				return -1;
 			}	
-#ifdef CGICDEBUG
-			CGICDEBUGSTART
-			fprintf(dout, "PostMultipartInput succeeded\n");
-			CGICDEBUGEND	
-#endif /* CGICDEBUG */
+			debug("PostMultipartInput succeeded\n");
 		}
 	} else if (cgiStrEqNc(cgiRequestMethod, "get")) {	
 		/* The spec says this should be taken care of by
 			the server, but... it isn't */
 		cgiContentLength = strlen(cgiQueryString);
 		if (cgiParseGetFormInput() != cgiParseSuccess) {
-#ifdef CGICDEBUG
-			CGICDEBUGSTART
-			fprintf(dout, "GetFormInput failed\n");
-			CGICDEBUGEND	
-#endif /* CGICDEBUG */
+			debug("GetFormInput failed\n");
 			cgiHeaderStatus(500, "Error reading form data");
 			cgiFreeResources();
 			return -1;
 		} else {	
-#ifdef CGICDEBUG
-			CGICDEBUGSTART
-			fprintf(dout, "GetFormInput succeeded\n");
-			CGICDEBUGEND	
-#endif /* CGICDEBUG */
+			debug("GetFormInput succeeded\n");
 		}
 	}
 #ifdef UNIT_TEST
@@ -1409,11 +1372,7 @@ cgiFormResultType cgiFormStringMultiple(
 	}
 	/* Now go get the entries */
 	e = cgiFormEntryFindFirst(name);
-#ifdef CGICDEBUG
-	CGICDEBUGSTART
-	fprintf(dout, "StringMultiple Beginning\n");
-	CGICDEBUGEND
-#endif /* CGICDEBUG */
+	debug("StringMultiple Beginning\n");
 	if (e) {
 		i = 0;
 		do {
@@ -1430,19 +1389,11 @@ cgiFormResultType cgiFormStringMultiple(
 			i++;
 		} while ((e = cgiFormEntryFindNext()) != 0); 
 		*result = stringArray;
-#ifdef CGICDEBUG
-		CGICDEBUGSTART
-		fprintf(dout, "StringMultiple Succeeding\n");
-		CGICDEBUGEND
-#endif /* CGICDEBUG */
+		debug("StringMultiple Succeeding\n");
 		return cgiFormSuccess;
 	} else {
 		*result = stringArray;
-#ifdef CGICDEBUG
-		CGICDEBUGSTART
-		fprintf(dout, "StringMultiple found nothing\n");
-		CGICDEBUGEND
-#endif /* CGICDEBUG */
+		debug("StringMultiple found nothing\n");
 		return cgiFormNotFound;
 	}	
 }
@@ -1628,27 +1579,15 @@ cgiFormResultType cgiFormSelectSingle(
 	cgiFormEntry *e;
 	int i;
 	e = cgiFormEntryFindFirst(name);
-#ifdef CGICDEBUG
-	CGICDEBUGSTART
-	fprintf(dout, "%d\n", (int) e);
-	CGICDEBUGEND
-#endif /* CGICDEBUG */
+	debug("%d\n", (int) e);
 	if (!e) {
 		*result = defaultV;
 		return cgiFormNotFound;
 	}
 	for (i=0; (i < choicesTotal); i++) {
-#ifdef CGICDEBUG
-		CGICDEBUGSTART
-		fprintf(dout, "%s %s\n", choicesText[i], e->value);
-		CGICDEBUGEND
-#endif /* CGICDEBUG */
+		debug("%s %s\n", choicesText[i], e->value);
 		if (cgiStrEq(choicesText[i], e->value)) {
-#ifdef CGICDEBUG
-			CGICDEBUGSTART
-			fprintf(dout, "MATCH\n");
-			CGICDEBUGEND
-#endif /* CGICDEBUG */
+			debug("MATCH\n");
 			*result = i;
 			return cgiFormSuccess;
 		}
