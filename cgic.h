@@ -92,6 +92,9 @@ typedef enum {
 	cgiFormEOF
 } cgiFormResultType;
 
+
+extern void cgiDebug(const char * fmt, ...);
+
 /* These functions are used to retrieve form data. See
 	cgic.html for documentation. */
 

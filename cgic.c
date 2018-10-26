@@ -111,7 +111,7 @@ static int cgiStrBeginsNc(char *s1, char *s2);
 static int unitTest();
 #endif
 
-void debug(const char * fmt, ...)
+void cgiDebug(const char * fmt, ...)
 {
 #ifdef CGICDEBUG
 	FILE *dout;
@@ -196,9 +196,9 @@ int main(int argc, char *argv[]) {
 	cgiGetenv(&cgiReferrer, "HTTP_REFERER");
 	cgiGetenv(&cgiCookie, "HTTP_COOKIE");
 
-	debug("%d\n", cgiContentLength);
-	debug("%s\n", cgiRequestMethod);
-	debug("%s\n", cgiContentType);
+	cgiDebug("%d\n", cgiContentLength);
+	cgiDebug("%s\n", cgiRequestMethod);
+	cgiDebug("%s\n", cgiContentType);
 
 #ifdef _WIN32
 	/* 1.07: Must set stdin and stdout to binary mode */
@@ -223,37 +223,37 @@ int main(int argc, char *argv[]) {
 
 
 	if (cgiStrEqNc(cgiRequestMethod, "post")) {
-		debug("POST recognized\n");
+		cgiDebug("POST recognized\n");
 		if (cgiStrEqNc(cgiContentType, "application/x-www-form-urlencoded")) {	
-			debug("Calling PostFormInput\n");
+			cgiDebug("Calling PostFormInput\n");
 			if (cgiParsePostFormInput() != cgiParseSuccess) {
-				debug("PostFormInput failed\n");
+				cgiDebug("PostFormInput failed\n");
 				cgiHeaderStatus(500, "Error reading form data");
 				cgiFreeResources();
 				return -1;
 			}	
-			debug("PostFormInput succeeded\n");
+			cgiDebug("PostFormInput succeeded\n");
 		} else if (cgiStrEqNc(cgiContentType, "multipart/form-data")) {
-			debug("Calling PostMultipartInput\n");
+			cgiDebug("Calling PostMultipartInput\n");
 			if (cgiParsePostMultipartInput() != cgiParseSuccess) {
-				debug("PostMultipartInput failed\n");
+				cgiDebug("PostMultipartInput failed\n");
 				cgiHeaderStatus(500, "Error reading form data");
 				cgiFreeResources();
 				return -1;
 			}	
-			debug("PostMultipartInput succeeded\n");
+			cgiDebug("PostMultipartInput succeeded\n");
 		}
 	} else if (cgiStrEqNc(cgiRequestMethod, "get")) {	
 		/* The spec says this should be taken care of by
 			the server, but... it isn't */
 		cgiContentLength = strlen(cgiQueryString);
 		if (cgiParseGetFormInput() != cgiParseSuccess) {
-			debug("GetFormInput failed\n");
+			cgiDebug("GetFormInput failed\n");
 			cgiHeaderStatus(500, "Error reading form data");
 			cgiFreeResources();
 			return -1;
 		} else {	
-			debug("GetFormInput succeeded\n");
+			cgiDebug("GetFormInput succeeded\n");
 		}
 	}
 #ifdef UNIT_TEST
@@ -1372,7 +1372,7 @@ cgiFormResultType cgiFormStringMultiple(
 	}
 	/* Now go get the entries */
 	e = cgiFormEntryFindFirst(name);
-	debug("StringMultiple Beginning\n");
+	cgiDebug("StringMultiple Beginning\n");
 	if (e) {
 		i = 0;
 		do {
@@ -1389,11 +1389,11 @@ cgiFormResultType cgiFormStringMultiple(
 			i++;
 		} while ((e = cgiFormEntryFindNext()) != 0); 
 		*result = stringArray;
-		debug("StringMultiple Succeeding\n");
+		cgiDebug("StringMultiple Succeeding\n");
 		return cgiFormSuccess;
 	} else {
 		*result = stringArray;
-		debug("StringMultiple found nothing\n");
+		cgiDebug("StringMultiple found nothing\n");
 		return cgiFormNotFound;
 	}	
 }
@@ -1579,15 +1579,15 @@ cgiFormResultType cgiFormSelectSingle(
 	cgiFormEntry *e;
 	int i;
 	e = cgiFormEntryFindFirst(name);
-	debug("%d\n", (int) e);
+	cgiDebug("%d\n", (int) e);
 	if (!e) {
 		*result = defaultV;
 		return cgiFormNotFound;
 	}
 	for (i=0; (i < choicesTotal); i++) {
-		debug("%s %s\n", choicesText[i], e->value);
+		cgiDebug("%s %s\n", choicesText[i], e->value);
 		if (cgiStrEq(choicesText[i], e->value)) {
-			debug("MATCH\n");
+			cgiDebug("MATCH\n");
 			*result = i;
 			return cgiFormSuccess;
 		}
