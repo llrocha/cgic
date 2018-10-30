@@ -111,8 +111,7 @@ static int cgiStrBeginsNc(char *s1, char *s2);
 static int unitTest();
 #endif
 
-void cgiDebug(const char * fmt, ...)
-{
+void cgiDebug(const char * fmt, ...) {
 #ifdef CGICDEBUG
 	FILE *dout;
 	dout = fopen(cgicTempDir "/cgic.log", "a");
@@ -266,7 +265,7 @@ int main(int argc, char *argv[]) {
 #endif
 }
 
-static void cgiGetenv(char **s, char *var){
+static void cgiGetenv(char **s, char *var) {
 	*s = getenv(var);
 	if (!(*s)) {
 		*s = "";
@@ -315,8 +314,7 @@ typedef struct {
 	int offset;
 } mpStream, *mpStreamPtr;
 
-int mpRead(mpStreamPtr mpp, char *buffer, int len)
-{
+int mpRead(mpStreamPtr mpp, char *buffer, int len) {
 	int ilen = len;
 	int got = 0;
 	/* Refuse to read past the declared length in order to
@@ -357,8 +355,7 @@ int mpRead(mpStreamPtr mpp, char *buffer, int len)
 	}
 }
 
-void mpPutBack(mpStreamPtr mpp, char *data, int len)
-{
+void mpPutBack(mpStreamPtr mpp, char *data, int len) {
 	mpp->offset -= len;
 	while (len) {
 		mpp->putback[mpp->writePos++] = *data++;
