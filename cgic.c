@@ -18,6 +18,7 @@
 
 #ifdef _WIN32
 #include <io.h>
+#include <stdarg.h> 
 
 /* cgic 2.01 */
 #include <fcntl.h>
@@ -118,7 +119,7 @@ void cgiDebug(const char * fmt, ...) {
 	if (dout) {
 		va_list args;
 		va_start(args, fmt);
-		vdebug(fmt, args);
+		fprintf(dout, fmt, args);
 		va_end(args);
 	}
 	fclose(dout);
@@ -1818,15 +1819,29 @@ void cgiHeaderCookieSetString(char *name, char *value, int secondsToLive,
 }
 
 void cgiHeaderLocation(char *redirectUrl) {
-	fprintf(cgiOut, "Location: %s\r\n\r\n", redirectUrl);
+	fprintf(cgiOut, "Location: %s\r\n", redirectUrl);
 }
 
 void cgiHeaderStatus(int status, char *statusMessage) {
-	fprintf(cgiOut, "Status: %d %s\r\n\r\n", status, statusMessage);
+	fprintf(cgiOut, "Status: %d %s\r\n", status, statusMessage);
 }
 
 void cgiHeaderContentType(char *mimeType) {
-	fprintf(cgiOut, "Content-type: %s\r\n\r\n", mimeType);
+	fprintf(cgiOut, "Content-type: %s\r\n", mimeType);
+}
+
+void cgiHeaderContentLength(int length) {
+	cgiDebug("Content-Length: %d\n", length);
+	fprintf(cgiOut, "Content-Length: %d\r\n", length);
+}
+
+void cgiHeaderContentDisposition(char *filename) {
+	cgiDebug("Content-Disposition: attachment; filename='%s'\n", filename);
+	fprintf(cgiOut, "Content-Disposition: attachment; filename='%s'\r\n", filename);
+}
+
+void cgiCloseHeader() {
+	fprintf(cgiOut, "\r\n");
 }
 
 static int cgiWriteString(FILE *out, char *s);

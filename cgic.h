@@ -16,6 +16,8 @@ extern "C" {
 
 #include <stdio.h>
 
+#define CGICDEBUG
+
 /* The various CGI environment variables. Instead of using getenv(),
 	the programmer should refer to these, which are always
 	valid null-terminated strings (they may be empty, but they 
@@ -194,6 +196,9 @@ extern void cgiHeaderCookieSetInteger(char *name, int value,
 extern void cgiHeaderLocation(char *redirectUrl);
 extern void cgiHeaderStatus(int status, char *statusMessage);
 extern void cgiHeaderContentType(char *mimeType);
+extern void cgiHeaderContentLength(int length);
+extern void cgiHeaderContentDisposition(char *filename);
+extern void cgiCloseHeader();
 
 typedef enum {
 	cgiEnvironmentIO,
