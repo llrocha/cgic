@@ -49,6 +49,8 @@ char *cgiRemoteUser;
 char *cgiRemoteIdent;
 char cgiContentTypeData[1024];
 char *cgiContentType = cgiContentTypeData;
+char cgiContentDispositionData[1024];
+char *cgiContentDisposition = cgiContentDispositionData;
 char *cgiMultipartBoundary;
 char *cgiCookie;
 int cgiContentLength;
@@ -112,8 +114,20 @@ static int cgiStrBeginsNc(char *s1, char *s2);
 static int unitTest();
 #endif
 
-void cgiDebug(const char * fmt, ...) {
+void cgiDebug(const char * message) {
 #ifdef CGICDEBUG
+	FILE *dout;
+	dout = fopen(cgicTempDir "/cgic.log", "a");
+	if (dout) {
+		fprintf(dout, message);
+	}
+	fclose(dout);
+#endif /* CGICDEBUG */
+}
+
+/*
+void cgiDebug(const char * fmt, ...) {
+
 	FILE *dout;
 	dout = fopen(cgicTempDir "/cgic.log", "a");
 	if (dout) {
@@ -123,13 +137,16 @@ void cgiDebug(const char * fmt, ...) {
 		va_end(args);
 	}
 	fclose(dout);
-#endif /* CGICDEBUG */
+
 }
+*/
 
 int main(int argc, char *argv[]) {
 	int result;
 	char *cgiContentLengthString;
 	char *e;
+	char message[1024];
+
 	cgiSetupConstants();
 	cgiGetenv(&cgiServerSoftware, "SERVER_SOFTWARE");
 	cgiGetenv(&cgiServerName, "SERVER_NAME");
@@ -196,10 +213,6 @@ int main(int argc, char *argv[]) {
 	cgiGetenv(&cgiReferrer, "HTTP_REFERER");
 	cgiGetenv(&cgiCookie, "HTTP_COOKIE");
 
-	cgiDebug("%d\n", cgiContentLength);
-	cgiDebug("%s\n", cgiRequestMethod);
-	cgiDebug("%s\n", cgiContentType);
-
 #ifdef _WIN32
 	/* 1.07: Must set stdin and stdout to binary mode */
 	/* 2.0: this is particularly crucial now and must not be removed */
@@ -256,6 +269,14 @@ int main(int argc, char *argv[]) {
 			cgiDebug("GetFormInput succeeded\n");
 		}
 	}
+
+	sprintf(message, "cgiContentLength: %d\n", cgiContentLength);
+	cgiDebug(message);
+	sprintf(message, "cgiRequestMethod: %s\n", cgiRequestMethod);
+	cgiDebug(message);
+	sprintf(message, "cgiContentType:   %s\n", cgiContentType);
+	cgiDebug(message);
+
 #ifdef UNIT_TEST
 	unitTest();
 	cgiFreeResources();
@@ -1574,16 +1595,19 @@ cgiFormResultType cgiFormSelectSingle(
 	char *name, char **choicesText, int choicesTotal, 
 	int *result, int defaultV) 
 {
+	char message[1024];
 	cgiFormEntry *e;
 	int i;
 	e = cgiFormEntryFindFirst(name);
-	cgiDebug("%d\n", (int) e);
+	sprintf(message, "%d\n", (int)e);
+	cgiDebug(message);
 	if (!e) {
 		*result = defaultV;
 		return cgiFormNotFound;
 	}
 	for (i=0; (i < choicesTotal); i++) {
-		cgiDebug("%s %s\n", choicesText[i], e->value);
+		sprintf(message, "%s %s\n", choicesText[i], e->value);
+		cgiDebug(message);
 		if (cgiStrEq(choicesText[i], e->value)) {
 			cgiDebug("MATCH\n");
 			*result = i;
@@ -1806,7 +1830,7 @@ void cgiHeaderCookieSetString(char *name, char *value, int secondsToLive,
 	then = now + secondsToLive;
 	gt = gmtime(&then);
 	fprintf(cgiOut, 
-		"Set-Cookie: %s=%s; domain=%s; expires=%s, %02d-%s-%04d %02d:%02d:%02d GMT; path=%s\r\n",
+		"Set-Cookie: %s=%s; domain=%s; expires=%s, %02d-%s-%04d %02d:%02d:%02d GMT; path=%s\n",
 		name, value, domain, 
 		days[gt->tm_wday],
 		gt->tm_mday,
@@ -1818,30 +1842,56 @@ void cgiHeaderCookieSetString(char *name, char *value, int secondsToLive,
 		path);
 }
 
-void cgiHeaderLocation(char *redirectUrl) {
-	fprintf(cgiOut, "Location: %s\r\n", redirectUrl);
+void cgiHeaderLocation(char *redirectUrl) 
+{
+	char message[1024];
+
+	sprintf(message, "Location: %s\n", redirectUrl);
+	fprintf(cgiOut, message);
+	cgiDebug(message);
 }
 
-void cgiHeaderStatus(int status, char *statusMessage) {
-	fprintf(cgiOut, "Status: %d %s\r\n", status, statusMessage);
+void cgiHeaderStatus(int status, char *statusMessage) 
+{
+	char message[1024];
+	sprintf(message, "Status: %d %s\n", status, statusMessage);
+	fprintf(cgiOut, message);
+	cgiDebug(message);
 }
 
-void cgiHeaderContentType(char *mimeType) {
-	fprintf(cgiOut, "Content-type: %s\r\n", mimeType);
+void cgiHeaderContentType(char *mimeType) 
+{
+	char message[1024];
+
+	sprintf(message, "Content-type: %s\n", mimeType);
+	fprintf(cgiOut, message);
+	cgiDebug(message);
 }
 
-void cgiHeaderContentLength(int length) {
-	cgiDebug("Content-Length: %d\n", length);
-	fprintf(cgiOut, "Content-Length: %d\r\n", length);
+void cgiHeaderContentLength(int length) 
+{
+	char message[1024];
+
+	sprintf(message, "Content-Length: %d\n", length);
+	fprintf(cgiOut, message);
+	cgiDebug(message);
 }
 
-void cgiHeaderContentDisposition(char *filename) {
-	cgiDebug("Content-Disposition: attachment; filename='%s'\n", filename);
-	fprintf(cgiOut, "Content-Disposition: attachment; filename='%s'\r\n", filename);
+void cgiHeaderContentDisposition(char *filename) 
+{
+	char message[1024];
+
+	sprintf(message, "Content-Disposition: attachment; filename='%s'\n", filename);
+	fprintf(cgiOut, message);
+	cgiDebug(message);
 }
 
 void cgiCloseHeader() {
-	fprintf(cgiOut, "\r\n");
+	char message[1024];
+
+	sprintf(message, "\n");
+	fprintf(cgiOut, message);
+	cgiDebug(message);
 }
 
 static int cgiWriteString(FILE *out, char *s);

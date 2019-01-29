@@ -42,6 +42,7 @@ extern char *cgiAuthType;
 extern char *cgiRemoteUser;
 extern char *cgiRemoteIdent;
 extern char *cgiContentType;
+extern char *cgiContentDisposition;
 extern char *cgiAccept;
 extern char *cgiUserAgent;
 extern char *cgiReferrer;
